@@ -18,6 +18,11 @@ module AMF
       end
     end
 
+    desc "version", "Displays the program version information"
+    def version
+      puts "#{PROGRAM_NAME} v#{VERSION}"
+    end
+
     desc "load FILE", "reads a MEGA report file and loads it into the working database"
     method_option :prune, type: :boolean, aliases: "-P"
     def load(load_file)
