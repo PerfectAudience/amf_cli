@@ -32,8 +32,12 @@ module AMF
     end
 
     def self.load_csv(file, prune=false)
+      if prune
+        puts "Deleting all records"
+        delete_all
+      end
+
       puts "Loading #{file} into the DB"
-      delete_all if prune
       CSV.foreach(file, headers: true) { |record| load record }
     end
 
@@ -42,7 +46,7 @@ module AMF
       email = record["Contact Email"].to_s.strip.downcase
       name = record["Account Name"]
 
-      if account_id && email && email != ~ /@/
+      if account_id && email && email =~ /^\S+@\S+$/
         where(account_id: account_id, contact_email: email).first_or_create do |account|
           record.to_h.keys.each do |field|
             next if field == "Account ID" || field == "Contact Email"
@@ -50,9 +54,10 @@ module AMF
             account[Account.normalize_field(field)] = record[field]
           end
 
-          if account.changed? && account.valid?
-            account.save
-            puts "Loaded #{name} (#{email})"
+          if account.changed?
+            unless account.valid? && account.save
+              warn "Unable to create record for #{email}: #{account.errors.messages.inspect}"
+            end
           end
         end
       end
