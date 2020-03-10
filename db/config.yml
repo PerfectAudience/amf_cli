@@ -1,0 +1,13 @@
+default: &default
+  adapter: sqlite3
+  encoding: unicode
+  pool: 5
+  host: localhost
+
+test: &test
+  <<: *default
+  database: db/amf_test.sqlite3
+
+production:
+  <<: *default
+  database: db/amf.sqlite3
