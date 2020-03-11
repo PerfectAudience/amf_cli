@@ -1,36 +1,31 @@
-# Amf
+# AMF Reporting CLI
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/amf`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
-
-## Installation
-
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'amf'
-```
-
-And then execute:
-
-    $ bundle install
-
-Or install it yourself as:
-
-    $ gem install amf
+This is a quick little CLI hack I used to create certain AMF reports. It may or may not be expanded as needs arise.
 
 ## Usage
 
-TODO: Write usage instructions here
+After checking out the repo, run `bin/setup` to install dependencies and create the database.
+Then run it from the repo directory with `bundle exec amf`
 
-## Development
+```bash
+Commands:
+  amf amf_count                    # Display the number of records selected for the AMF Report
+  amf amf_report                   # Produces the AMF valid accounts report
+  amf count                        # Returns the number of Account records in the system
+  amf diff_emails <FILE1> <FILE2>  # Takes two email lists and produces a list of those who appear in FILE1 but do not appear in FILE2
+  amf funnel_report <FILE>         # Returns a report of users which match records in FILE against the MEGA data
+  amf help [COMMAND]               # Describe available commands or one specific command
+  amf load FILE                    # reads a MEGA report file and loads it into the working database
+  amf version                      # Displays the program version information
+```
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Once installed, the first step is to run `amf laod FILE` where `FILE` is the MEGA report in CSV format.
+This takes roughly five minutes to run, but will load the data into a sqlite3 database for ease of future reporting.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+`amf help [command]` will give you more options as well.
+
+You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/amf.
-
+Bug reports and pull requests are welcome on GitHub at https://github.com/PerfectAudience/amf_cli

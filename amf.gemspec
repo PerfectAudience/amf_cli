@@ -10,14 +10,14 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "simple CLI utility to produce AMF reporting"
   spec.description   = "Produces various AMF reports as specified by input options"
-  spec.homepage      = "http://example.org"
+  spec.homepage      = "https://github.com/PerfectAudience/amf_cli"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
 
   spec.metadata["allowed_push_host"] = ""
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "http://example.org"
-  spec.metadata["changelog_uri"] = "http://example.org"
+  spec.metadata["source_code_uri"] = "https://github.com/PerfectAudience/amf_cli"
+  spec.metadata["changelog_uri"] = "https://github.com/PerfectAudience/amf_cli"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
