@@ -9,8 +9,8 @@ Then run it from the repo directory with `bundle exec amf`
 
 ```bash
 Commands:
-  amf amf_count                    # Display the number of records selected for the AMF Report
   amf amf_report                   # Produces the AMF valid accounts report
+  amf amf_report_info              # Display the number of records selected for the AMF Report
   amf count                        # Returns the number of Account records in the system
   amf diff_emails <FILE1> <FILE2>  # Takes two email lists and produces a list of those who appear in FILE1 but do not appear in FILE2
   amf funnel_report <FILE>         # Returns a report of users which match records in FILE against the MEGA data
