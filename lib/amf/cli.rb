@@ -58,7 +58,7 @@ module AMF
       AMF::Reports.amf_report
     end
 
-    desc "amf_count", "Display the number of records selected for the AMF Report"
+    desc "amf_report_info", "Display the number of records selected for the AMF Report"
     def amf_report_info
       check_load
       AMF::Reports.amf_count

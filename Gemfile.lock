@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    AMF (1.0.0)
+    AMF (1.0.1)
       activerecord
       otr-activerecord
       sqlite3

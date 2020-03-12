@@ -3,7 +3,7 @@
 module AMF
   module Reports
     def self.start_date
-      Date.today - 1.year
+      1.year.ago
     end
 
     def self.sql_query
