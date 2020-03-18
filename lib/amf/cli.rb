@@ -25,10 +25,18 @@ module AMF
 
     desc "load FILE", "reads a MEGA report file and loads it into the working database"
     method_option :prune, type: :boolean, aliases: "-P"
+    method_option :type, aliases: "-t", type: :string, enum: %w[mega stripe funnel], default: "mega"
     def load(load_file)
       if File.exist? load_file
-        Account.load_csv load_file, options[:prune]
-        count
+        case options[:type]
+        when "mega"
+          Account.load_mega load_file, options[:prune]
+          count
+        when "funnel"
+          AMF::Reports.funnel_report funnel_file
+        when "stripe"
+          Account.load_stripe load_file
+        end
       else
         puts "ERROR: The file '#{load_file}' does not exist\n\n"
         help
@@ -62,6 +70,11 @@ module AMF
     def amf_report_info
       check_load
       AMF::Reports.amf_count
+    end
+
+    desc "amf_report_name", "Produce a filename with the current parameters for the report"
+    def amf_report_filename
+      puts AMF::Reports.amf_filename
     end
 
     desc "diff_emails <FILE1> <FILE2>", "Takes two email lists and produces a list of those who appear in FILE1 but do not appear in FILE2"

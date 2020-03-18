@@ -9,5 +9,6 @@ gem "rake", "~> 12.3"
 
 group :development, :test do
   gem "guard", require: false
+  gem "pry"
   gem "rubocop"
 end

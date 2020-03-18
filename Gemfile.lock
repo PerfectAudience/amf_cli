@@ -104,6 +104,7 @@ PLATFORMS
 DEPENDENCIES
   AMF!
   guard
+  pry
   rake (~> 12.3)
   rspec
   rubocop

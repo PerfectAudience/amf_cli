@@ -31,7 +31,7 @@ module AMF
       field.gsub("?", "").gsub(/\s+/, "_").downcase
     end
 
-    def self.load_csv(file, prune=false)
+    def self.load_mega(file, prune=false)
       if prune
         puts "Deleting all records"
         delete_all
@@ -39,6 +39,25 @@ module AMF
 
       puts "Loading #{file} into the DB"
       CSV.foreach(file, headers: true) { |record| load record }
+
+      puts "#{Account.count} records added."
+    end
+
+    def self.load_stripe(file)
+      CSV.foreach(file, headers: true) do |row|
+        email = row["Email"].to_s.strip.downcase
+
+        account = Account.where(contact_email: email).first unless email.empty?
+
+        unless account
+          warn "Account with #{email} could not be found in the MEGA data"
+          next
+        end
+
+        account.update has_stripe: true
+      end
+
+      puts "#{Account.where(has_stripe: true).count} records added."
     end
 
     def self.load(record)
