@@ -30,7 +30,7 @@ module AMF
       end
 
       def info
-        puts "There were #{accounts.count} accounts matching #{params}"
+        "There were #{accounts.count} accounts matching #{params}"
       end
 
       def filename

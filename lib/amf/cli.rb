@@ -1,96 +1,51 @@
 # frozen_string_literal: true
 
 require "thor"
+require_relative "cli/load"
+require_relative "cli/report"
 
 module AMF
-  class CLI < Thor
-    package_name "AMF"
-    map "-v" => :version
+  module CLI
+    class CLI < Thor
+      package_name "AMF"
+      map "-v" => :version
 
-    def self.exit_on_failure?
-      true
-    end
+      def self.exit_on_failure?
+        true
+      end
 
-    no_commands do
-      def check_load
-        if Account.count == 0
-          puts "NO DATA: please run 'load' first\n\n"
-          help
+      desc "version", "Displays the program version information"
+      def version
+        puts "#{PROGRAM_NAME} v#{VERSION}"
+      end
+
+      desc "count", "Returns the number of Account records in the system"
+      def count
+        puts "We have #{Account.count} records in the DB"
+      end
+
+      desc "diff_emails <FILE1> <FILE2>", "Takes two email lists and produces a list of those who appear in FILE1 but do not appear in FILE2"
+      def diff_emails(file1, file2)
+        if !File.exist?(file1) || !File.exist?(file2)
+          puts "Whoops! One (or both) of the input files does not exist"
           exit 1
         end
-      end
-    end
 
-    desc "version", "Displays the program version information"
-    def version
-      puts "#{PROGRAM_NAME} v#{VERSION}"
-    end
+        list1 = File.open(file1).readlines.map(&:strip).map(&:downcase) if File.exist? file1
+        list2 = File.open(file2).readlines.map(&:strip).map(&:downcase) if File.exist? file2
 
-    desc "load FILE", "reads a MEGA report file and loads it into the working database"
-    method_option :prune, type: :boolean, aliases: "-P"
-    method_option :type, aliases: "-t", type: :string, enum: %w[mega stripe funnel], default: "mega"
-    def load(load_file)
-      if File.exist? load_file
-        case options[:type]
-        when "mega"
-          Account.load_mega load_file, options[:prune]
-          count
-        when "funnel"
-          AMF::Reports.funnel_report funnel_file
-        when "stripe"
-          Account.load_stripe load_file
-        end
-      else
-        puts "ERROR: The file '#{load_file}' does not exist\n\n"
-        help
-      end
-    end
-
-    desc "count", "Returns the number of Account records in the system"
-    def count
-      puts "We have #{Account.count} records in the DB"
-    end
-
-    desc "funnel_report <FILE>", "Returns a report of users which match records in FILE against the MEGA data"
-    def funnel_report(funnel_file)
-      check_load
-
-      if File.exist? funnel_file
-        AMF::Reports.funnel_report funnel_file
-      else
-        puts "ERROR: The file '#{funnel_file}' does not exist\n\n"
-        help
-      end
-    end
-
-    desc "report", "Produces the AMF valid accounts report"
-    def report
-      check_load
-      Reports::AMF.new.report
-    end
-
-    desc "report_info", "Display the number of records selected for the AMF Report"
-    def report_info
-      check_load
-      Reports::AMF.new.info
-    end
-
-    desc "report_name", "Produce a filename with the current parameters for the report"
-    def report_filename
-      puts Reports::AMF.new.filename
-    end
-
-    desc "diff_emails <FILE1> <FILE2>", "Takes two email lists and produces a list of those who appear in FILE1 but do not appear in FILE2"
-    def diff_emails(file1, file2)
-      if !File.exist?(file1) || !File.exist?(file2)
-        puts "Whoops! One (or both) of the input files does not exist"
-        exit 1
+        puts list1.reject { |e| list2.include?(e) }
       end
 
-      list1 = File.open(file1).readlines.map(&:strip).map(&:downcase) if File.exist? file1
-      list2 = File.open(file2).readlines.map(&:strip).map(&:downcase) if File.exist? file2
+      desc "load", "Commands used to preload data into the system"
+      subcommand "load", Load
 
-      puts list1.reject { |e| list2.include?(e) }
+      desc "report", "Commands used to create various reports"
+      subcommand "report", Report
+    end
+
+    def self.start
+      CLI.start
     end
   end
 end
