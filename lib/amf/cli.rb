@@ -4,6 +4,9 @@ require "thor"
 
 module AMF
   class CLI < Thor
+    package_name "AMF"
+    map "-v" => :version
+
     def self.exit_on_failure?
       true
     end
@@ -60,21 +63,21 @@ module AMF
       end
     end
 
-    desc "amf_report", "Produces the AMF valid accounts report"
-    def amf_report
+    desc "report", "Produces the AMF valid accounts report"
+    def report
       check_load
-      AMF::Reports.amf_report
+      Reports::AMF.new.report
     end
 
-    desc "amf_report_info", "Display the number of records selected for the AMF Report"
-    def amf_report_info
+    desc "report_info", "Display the number of records selected for the AMF Report"
+    def report_info
       check_load
-      AMF::Reports.amf_count
+      Reports::AMF.new.info
     end
 
-    desc "amf_report_name", "Produce a filename with the current parameters for the report"
-    def amf_report_filename
-      puts AMF::Reports.amf_filename
+    desc "report_name", "Produce a filename with the current parameters for the report"
+    def report_filename
+      puts Reports::AMF.new.filename
     end
 
     desc "diff_emails <FILE1> <FILE2>", "Takes two email lists and produces a list of those who appear in FILE1 but do not appear in FILE2"

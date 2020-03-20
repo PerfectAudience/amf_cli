@@ -2,49 +2,54 @@
 
 module AMF
   module Reports
-    def self.start_date
-      1.year.ago
-    end
+    class AMF
+      def initialize(sql_options={})
+        AMF.validate
 
-    def self.sql_query
-      {on_click_funnel: false, shsp_account: false, is_invoiced: false, deactivated_all_campaigns: false, has_stripe: true}
-    end
-
-    def self.lifetime_spend_min
-      5
-    end
-
-    def self.accounts
-      if Account.where(on_click_funnel: true).count == 0
-        puts "No Funnel Accounts are set, maybe you need to run a Click Funnel report first?"
-        exit 1
+        @lifetime_spend = sql_options.delete(:lifetime_spend) || 5
+        @start_date = sql_options.delete(:start_date) || 12.months.ago
+        @sql_query = {on_click_funnel:           false,
+                      shsp_account:              false,
+                      is_invoiced:               false,
+                      deactivated_all_campaigns: true,
+                      has_stripe:                true}.merge(sql_options)
       end
 
-      if Account.where(has_stripe: true).count == 0
-        puts "No Stripe Accounts are set, maybe you need to load the stripe data first?"
-        exit 1
+      def params
+        @sql_query.merge({lifetime_spend: @lifetime_spend, start_date: @start_date}).map { |k, v| "#{k}:#{v}" }.join(" ")
       end
 
-      # Pull accounts that have been created in the last 12 months, but don't have a SharpSpring account nor an Invoice Status nor have already been seen on the Click Funnel report.
-      acc_created_at = Account.arel_table[:acc_created_at]
-      Account.where(acc_created_at.gt(start_date)).where(sql_query).where("lifetime_spend > :spend", spend: lifetime_spend_min)
-    end
+      def accounts
+        acc_created_at = Account.arel_table[:acc_created_at]
+        Account.where(acc_created_at.gt(@start_date)).where(@sql_query).where("lifetime_spend > :spend", spend: @lifetime_spend)
+      end
 
-    def self.amf_count
-      puts "There were #{accounts.count} accounts matching #{amf_params}"
-    end
+      def report
+        puts Account.csv_header
+        puts accounts.map(&:to_csv)
+      end
 
-    def self.amf_report
-      puts Account.csv_header
-      puts accounts.map(&:to_csv)
-    end
+      def info
+        puts "There were #{accounts.count} accounts matching #{params}"
+      end
 
-    def self.amf_params
-      sql_query.merge({lifetime_spend: lifetime_spend_min, start_date: start_date}).map { |k, v| "#{k}:#{v}" }.join(" ")
-    end
+      def filename
+        "AMF Report with #{params}.csv"
+      end
 
-    def self.amf_filename
-      "AMF Report with #{amf_params}.csv"
+      ##
+      # Class Methods
+      ##
+
+      def self.validate
+        if Account.where(on_click_funnel: true).count == 0
+          raise "No Funnel Accounts are set, maybe you need to run a Click Funnel report first?"
+        end
+
+        if Account.where(has_stripe: true).count == 0
+          raise "No Stripe Accounts are set, maybe you need to load the stripe data first?"
+        end
+      end
     end
   end
 end
