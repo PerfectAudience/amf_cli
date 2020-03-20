@@ -60,6 +60,23 @@ module AMF
       puts "#{Account.where(has_stripe: true).count} records added."
     end
 
+    def self.load_amf(file)
+      CSV.foreach(file, headers: true) do |row|
+        email = row["contact_email"].to_s.strip.downcase
+
+        account = Account.where(contact_email: email).first unless email.empty?
+
+        unless account
+          warn "Account with #{email} could not be found in the MEGA data"
+          next
+        end
+
+        account.update amf_active: true
+      end
+
+      puts "#{Account.where(amf_active: true).count} records added."
+    end
+
     def self.load(record)
       account_id = record["Account ID"].to_s.strip
       email = record["Contact Email"].to_s.strip.downcase

@@ -31,6 +31,11 @@ module AMF
       def stripe(file)
         AMF::Account.load_stripe(file) if check_file(file)
       end
+
+      desc "amfed FILE", "loads records who have had AMF activated"
+      def amfed(file)
+        AMF::Account.load_amf(file) if check_file(file)
+      end
     end
   end
 end

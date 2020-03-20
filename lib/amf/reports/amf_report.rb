@@ -11,6 +11,7 @@ module AMF
         @sql_query = {on_click_funnel:           false,
                       shsp_account:              false,
                       is_invoiced:               false,
+                      amf_active:                false,
                       deactivated_all_campaigns: true,
                       has_stripe:                true}.merge(sql_options)
       end

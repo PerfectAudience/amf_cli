@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_18_160454) do
+ActiveRecord::Schema.define(version: 2020_03_20_201912) do
 
   create_table "accounts", primary_key: "account_id", id: :string, force: :cascade do |t|
     t.string "account_name"
@@ -65,6 +65,7 @@ ActiveRecord::Schema.define(version: 2020_03_18_160454) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.boolean "has_stripe", default: false
+    t.boolean "amf_active", default: false
     t.index ["account_id"], name: "index_accounts_on_account_id"
     t.index ["contact_email"], name: "index_accounts_on_contact_email"
   end
