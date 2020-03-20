@@ -6,8 +6,8 @@ module AMF
       def initialize(sql_options={})
         AMF.validate
 
-        @lifetime_spend = sql_options.delete(:lifetime_spend) || 5
-        @start_date = sql_options.delete(:start_date) || 12.months.ago
+        @lifetime_spend = sql_options.delete(:lifetime_spend) { 5 }
+        @start_date = eval(sql_options.delete(:start_date) { "12.months.ago" })
         @sql_query = {on_click_funnel:           false,
                       shsp_account:              false,
                       is_invoiced:               false,
@@ -17,7 +17,7 @@ module AMF
       end
 
       def params
-        @sql_query.merge({lifetime_spend: @lifetime_spend, start_date: @start_date}).map { |k, v| "#{k}:#{v}" }.join(" ")
+        @sql_query.merge({lifetime_spend: @lifetime_spend, start_date: @start_date}).map { |k, v| "#{k}:#{v}" }.join(", ")
       end
 
       def accounts
@@ -35,7 +35,7 @@ module AMF
       end
 
       def filename
-        "AMF Report with #{params}.csv"
+        "AMF Report with #{params}.csv".gsub(/,\s+/, "__").gsub(/\s+/, "_")
       end
 
       ##

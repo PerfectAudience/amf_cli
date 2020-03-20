@@ -6,6 +6,7 @@ module AMF
       package_name "AMF::Report"
       map "-I" => :info
       map "-F" => :filename
+      default_task :report
 
       no_commands do
         def check_load
@@ -15,24 +16,31 @@ module AMF
             exit 1
           end
         end
+
+        def sql_options(opts)
+          opts.transform_keys(&:to_sym)
+        end
       end
 
-      desc "amf", "Produces the AMF valid accounts report"
-      def amf
+      desc "report", "Produces the AMF valid accounts report"
+      method_option :opts, type: :hash, default: {}
+      def report
         check_load
-        AMF::Reports::AMF.new.report
+        AMF::Reports::AMF.new(sql_options(options[:opts])).report
       end
 
       desc "filename", "returns a unique filename based on teh currently selected parameters"
+      method_option :opts, type: :hash, default: {}
       def filename
         check_load
-        puts AMF::Reports::AMF.new.filename
+        puts AMF::Reports::AMF.new(sql_options(options[:opts])).filename
       end
 
       desc "info", "Displays information about the AMF report using the current SQL parameters"
+      method_option :opts, type: :hash, default: {}
       def info
         check_load
-        puts AMF::Reports::AMF.new.info
+        puts AMF::Reports::AMF.new(sql_options(options[:opts])).info
       end
     end
   end
