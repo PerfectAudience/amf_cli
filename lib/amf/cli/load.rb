@@ -3,6 +3,8 @@
 module AMF
   module CLI
     class Load < Thor
+      package_name "AMF::Load"
+
       no_commands do
         def check_file(file)
           unless File.exist? file
