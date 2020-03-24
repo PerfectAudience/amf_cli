@@ -35,8 +35,9 @@ module AMF
       end
 
       desc "amfed FILE", "loads records who have had AMF activated"
+      method_option :header, type: :string, aliases: "-h", desc: "Provide the CSV header string"
       def amfed(file)
-        AMF::Account.load_amf(file) if check_file(file)
+        AMF::Account.load_amf(file, options[:header]) if check_file(file)
       end
     end
   end

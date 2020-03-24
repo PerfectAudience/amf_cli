@@ -37,7 +37,7 @@ AMF::Report commands:
   amf report filename        # returns a unique filename based on teh currently selected parameters
   amf report help [COMMAND]  # Describe subcommands or one specific subcommand
   amf report info            # Displays information about the AMF report using the current SQL parameters
-  amf report report          # Produces the AMF valid accounts report
+  amf report report          # Produces the AMF valid accounts report (default command)
 ```
 
 Once installed, the first step is to run `amf laod mega FILE` where `FILE` is the MEGA report in CSV format.

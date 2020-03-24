@@ -22,7 +22,7 @@ module AMF
         end
       end
 
-      desc "report", "Produces the AMF valid accounts report"
+      desc "report", "Produces the AMF valid accounts report (default command)"
       method_option :opts, type: :hash, default: {}
       def report
         check_load
