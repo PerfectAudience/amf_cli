@@ -7,9 +7,19 @@ AllCops:
     - bin/**/*
     - node_modules/**/*
 
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
+
 # Too short methods lead to extraction of single-use methods, which can make
 # the code easier to read (by naming things), but can also clutter the class
 Metrics/MethodLength:
+  Enabled: false
   Max: 20
 
 # The guiding principle of classes is SRP, SRP can't be accurately measured by LoC

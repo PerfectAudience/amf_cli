@@ -6,8 +6,8 @@ module AMF
       def initialize(sql_options={})
         AMF.validate
 
+        @start_date = AMF.convert_to_date(sql_options.delete(:start_date))
         @lifetime_spend = sql_options.delete(:lifetime_spend) { 5 }
-        @start_date = eval(sql_options.delete(:start_date) { "12.months.ago" })
         @sql_query = {on_click_funnel:           false,
                       shsp_account:              false,
                       is_invoiced:               false,
@@ -17,12 +17,15 @@ module AMF
       end
 
       def params
-        @sql_query.merge({lifetime_spend: @lifetime_spend, start_date: @start_date}).map { |k, v| "#{k}:#{v}" }.join(", ")
+        @sql_query.merge({lifetime_spend: @lifetime_spend, start_date: @start_date.to_s})
+                  .map { |k, v| "#{k}:#{v}" }.join(", ")
       end
 
       def accounts
         acc_created_at = Account.arel_table[:acc_created_at]
-        Account.where(acc_created_at.gt(@start_date)).where(@sql_query).where("lifetime_spend > :spend", spend: @lifetime_spend)
+        Account.where(acc_created_at.gt(@start_date))
+               .where(@sql_query)
+               .where("lifetime_spend > :spend", spend: @lifetime_spend)
       end
 
       def report
@@ -42,12 +45,18 @@ module AMF
       # Class Methods
       ##
 
+      def self.convert_to_date(date)
+        return 12.months.ago.to_date if date.nil?
+
+        date =~ /^\d+\.(month|year)s?\.ago$/ ? eval(date).to_date : date.to_date # rubocop:disable Security/Eval
+      end
+
       def self.validate
-        if Account.where(on_click_funnel: true).count == 0
+        if Account.where(on_click_funnel: true).count.zero?
           raise "No Funnel Accounts are set, maybe you need to run a Click Funnel report first?"
         end
 
-        if Account.where(has_stripe: true).count == 0
+        if Account.where(has_stripe: true).count.zero? # rubocop:disable Style/GuardClause
           raise "No Stripe Accounts are set, maybe you need to load the stripe data first?"
         end
       end

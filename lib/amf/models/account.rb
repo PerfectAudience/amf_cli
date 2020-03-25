@@ -60,7 +60,7 @@ module AMF
       puts "#{Account.where(has_stripe: true).count} records added."
     end
 
-    def self.load_amf(file, header=nil)
+    def self.load_amf(file, header=nil) # rubocop:disable Metrics/AbcSize
       count = 0
 
       CSV.foreach(file, headers: !header.nil?) do |row|
@@ -72,7 +72,7 @@ module AMF
 
         if email.blank?
           warn "Could not find an email field in the input data"
-          return
+          return false
         end
 
         account = Account.where(contact_email: email).first
@@ -86,27 +86,26 @@ module AMF
         count += 1
       end
 
-      puts "#{count} records were updated" if count > 0
+      puts "#{count} records were updated" if count.positive?
       puts "#{Account.where(amf_active: true).count} total records AMFed."
     end
 
-    def self.load(record)
+    def self.load(record) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
       account_id = record["Account ID"].to_s.strip
       email = record["Contact Email"].to_s.strip.downcase
-      name = record["Account Name"]
 
-      if account_id && email && email =~ /^\S+@\S+$/
-        where(account_id: account_id, contact_email: email).first_or_create do |account|
-          record.to_h.keys.each do |field|
-            next if field == "Account ID" || field == "Contact Email"
+      return unless account_id && !email.blank? && email =~ /^\S+@\S+$/
 
-            account[Account.normalize_field(field)] = record[field]
-          end
+      where(account_id: account_id, contact_email: email).first_or_create do |account|
+        record.to_h.each_key do |field|
+          next if field.include? ["Account ID", "Contact Email"]
 
-          if account.changed?
-            unless account.valid? && account.save
-              warn "Unable to create record for #{email}: #{account.errors.messages.inspect}"
-            end
+          account[Account.normalize_field(field)] = record[field]
+        end
+
+        if account.changed?
+          unless account.valid? && account.save
+            warn "Unable to create record for #{email}: #{account.errors.messages.inspect}"
           end
         end
       end

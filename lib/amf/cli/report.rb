@@ -10,11 +10,11 @@ module AMF
 
       no_commands do
         def check_load
-          if Account.count == 0
-            puts "NO DATA: please run 'load' first\n\n"
-            AMF::CLI::Load.new.help("mega")
-            exit 1
-          end
+          return true unless Account.count.zero?
+
+          puts "NO DATA: please run 'load' first\n\n"
+          AMF::CLI::Load.new.help("mega")
+          exit 1
         end
 
         def sql_options(opts)

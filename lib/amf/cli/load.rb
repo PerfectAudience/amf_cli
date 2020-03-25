@@ -18,10 +18,10 @@ module AMF
       desc "mega FILE", "reads a MEGA report file and loads it into the working database"
       method_option :prune, type: :boolean, aliases: "-P"
       def mega(file)
-        if check_file(file)
-          AMF::Account.load_mega file, options[:prune]
-          count
-        end
+        return unless check_file(file)
+
+        AMF::Account.load_mega file, options[:prune]
+        count
       end
 
       desc "funnel FILE", "loads and produces the Click Funnel report"
