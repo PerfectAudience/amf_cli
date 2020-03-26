@@ -32,6 +32,12 @@ Metrics/BlockLength:
 Metrics/AbcSize:
   Max: 25
 
+Metrics/PerceivedComplexity:
+  Max: 10
+
+Metrics/CyclomaticComplexity:
+  Max: 10
+
 # Commonly used screens these days easily fit more than 80 characters.
 Layout/LineLength:
   Max: 120

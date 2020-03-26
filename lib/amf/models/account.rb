@@ -74,47 +74,56 @@ module AMF
     end
 
     def to_csv
-      CSV.generate { |csv| csv << attributes.values }
+      CSV.generate do |csv|
+        # Produce output in the same order as the header
+        csv << Account.csv_attributes.map { |a| send a }
+      end
     end
 
     ##
     # Class Methods
     ##
+    def self.csv_attributes
+      Account.attribute_names - ["_id"]
+    end
+
     def self.csv_header
-      CSV.generate { |csv| csv << Account.attribute_names }
+      CSV.generate { |csv| csv << Account.csv_attributes }
     end
 
     def self.field_name(field)
       field.gsub("?", "").gsub(/\s+/, "_").downcase
     end
 
-    def self.load_record(record, verbose=false) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
-      account_id = record["Account ID"].to_s.strip
-      email = record["Contact Email"].to_s.strip.downcase
+    def self.valid_email(email)
+      account_id && !email.blank? && email =~ /^\S+@\S+$/
+    end
 
-      unless account_id && !email.blank? && email =~ /^\S+@\S+$/
+    def self.load_amf_record(record, verbose=false)
+      account_id = record.delete("Account ID").strip
+      contact_email = record.delete("Contact Email").strip.downcase
+
+      unless valid_email(contact_email)
         warn "Invalid record: #{record}"
         return
       end
 
       print "Adding #{account_id}... " if verbose
 
-      where(account_id: account_id, contact_email: email).first_or_create do |account|
-        record.to_h.each_key do |field|
-          next if ["Account ID", "Contact Email"].include? field
+      where(account_id: account_id, contact_email: contact_email).first_or_create do |account|
+        record.to_h.each_key { |field| account[Account.field_name(field)] = record[field] }
 
-          account[Account.field_name(field)] = record[field]
+        unless account.changed?
+          puts "unchanged" if verbose
+          next
         end
 
-        if account.changed?
-          puts "saved" if verbose
-
-          unless account.valid? && account.save!
-            warn "Unable to create record for #{email}: #{account.errors.messages.inspect}"
-          end
-        elsif verbose
-          puts "unchanged"
+        unless account.valid? && account.save!
+          warn "Unable to create record for #{contact_email}: #{account.errors.messages.inspect}"
+          next
         end
+
+        puts "saved" if verbose
       end
     end
 
@@ -147,7 +156,7 @@ module AMF
 
       puts "Adding records..." if verbose
 
-      CSV.foreach(file, headers: true) { |record| load_record(record, verbose) }
+      CSV.foreach(file, headers: true) { |record| load_amf_record(record, verbose) }
 
       puts "#{Account.count} records added." if verbose
     end

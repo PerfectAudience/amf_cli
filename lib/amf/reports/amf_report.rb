@@ -22,7 +22,6 @@ module AMF
       end
 
       def accounts
-        # acc_created_at = Account.arel_table[:acc_created_at]
         Account.where(:acc_created_at.gte => @start_date)
                .where(:lifetime_spend.gt => @lifetime_spend)
                .where(@sql_query)
