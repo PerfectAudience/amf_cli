@@ -22,10 +22,10 @@ module AMF
       end
 
       def accounts
-        acc_created_at = Account.arel_table[:acc_created_at]
-        Account.where(acc_created_at.gt(@start_date))
+        # acc_created_at = Account.arel_table[:acc_created_at]
+        Account.where(:acc_created_at.gte => @start_date)
+               .where(:lifetime_spend.gt => @lifetime_spend)
                .where(@sql_query)
-               .where("lifetime_spend > :spend", spend: @lifetime_spend)
       end
 
       def report
@@ -38,7 +38,7 @@ module AMF
       end
 
       def filename
-        "AMF Report with #{params}.csv".gsub(/,\s+/, "__").gsub(/\s+/, "_")
+        "AMF-Report.#{params}.csv".gsub(/,\s+/, ".").gsub(/\s+/, "_")
       end
 
       ##
@@ -53,11 +53,13 @@ module AMF
 
       def self.validate
         if Account.where(on_click_funnel: true).count.zero?
-          raise "No Funnel Accounts are set, maybe you need to run a Click Funnel report first?"
+          warn "No Funnel Accounts are set, maybe you need to load the Click Funnel data first?"
+          exit 1
         end
 
         if Account.where(has_stripe: true).count.zero? # rubocop:disable Style/GuardClause
-          raise "No Stripe Accounts are set, maybe you need to load the stripe data first?"
+          warn "No Stripe Accounts are set, maybe you need to load the stripe data first?"
+          exit 1
         end
       end
     end

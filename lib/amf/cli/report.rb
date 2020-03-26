@@ -42,6 +42,12 @@ module AMF
         check_load
         puts AMF::Reports::AMF.new(sql_options(options[:opts])).info
       end
+
+      desc "funnel", "Produces the Click Funnel vs. MEGA report"
+      def funnel(file)
+        check_load
+        puts AMF::Reports.funnel_report(file)
+      end
     end
   end
 end

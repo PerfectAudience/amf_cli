@@ -1,15 +1,72 @@
 # frozen_string_literal: true
 
-require "csv"
-require "active_record"
-
 module AMF
-  class Account < ActiveRecord::Base
+  class Account
+    include Mongoid::Document
+
     validates :account_id, presence: true
     validates :contact_email, presence: true, uniqueness: {case_insensitive: true}
 
+    field :account_id, type: String
+    field :account_name, type: String
+    field :account_contact, type: String
+    field :contact_email, type: String
+    field :site_count, type: Integer
+    field :deactivated_all_campaigns, type: Boolean, default: false
+    field :last_30_day_active_count, type: Integer
+    field :last_7_day_budget_total, type: Integer
+    field :total_active, type: Integer
+    field :total_mobile_campaign, type: Integer
+    field :twitter_connected, type: Boolean, default: false
+    field :ads_sized_320x50, type: Integer
+    field :ads_sized_320x480, type: Integer
+    field :ads_sized_480x320, type: Integer
+    field :ads_sized_300x250, type: Integer
+    field :ads_sized_300x600, type: Integer
+    field :ads_sized_728x90, type: Integer
+    field :ads_sized_970x250, type: Integer
+    field :last_30_day_clicks, type: Integer
+    field :last_30_day_conversions, type: Integer
+    field :last_30_day_costs, type: Float
+    field :last_30_day_impressions, type: Integer
+    field :hubspot, type: Boolean, default: false
+    field :sidebar_campaigns_count, type: Integer
+    field :web_campaigns_count, type: Integer
+    field :dynamic_web_campaigns_count, type: Integer
+    field :segments_count, type: Integer
+    field :tag_found, type: Boolean, default: false
+    field :ads_count, type: Integer
+    field :total_campaigns, type: Integer
+    field :shsp_account, type: Boolean, default: false
+    field :conversions_count, type: Integer
+    field :lifetime_spend, type: Float
+    field :acc_created_at, type: Time
+    field :newsfeed_campaign_count, type: Integer
+    field :budget, type: Float
+    field :public_data_campaigns, type: Integer
+    field :dynamic_banners, type: Boolean, default: false
+    field :trailing_uniques, type: Integer
+    field :total_clicks, type: Integer
+    field :total_conversions, type: Integer
+    field :tracking_mobile, type: Boolean, default: false
+    field :mobile_beta, type: Boolean, default: false
+    field :profile_access, type: Boolean, default: false
+    field :fb_setup, type: Boolean, default: false
+    field :created_report, type: Boolean, default: false
+    field :has_customer_audience, type: Boolean, default: false
+    field :is_invoiced, type: Boolean, default: false
+    field :on_click_funnel, type: Boolean, default: false
+    field :has_stripe, type: Boolean, default: false
+    field :amf_active, type: Boolean, default: false
+
+    index({account_id: 1}, {unique: true})
+    index({contact_email: 1}, {unique: true})
+
+    ##
+    # Instance Methods
+    ##
     def trial_started?
-      lifetime_spend >= 0.01
+      lifetime_spend >= 1
     end
 
     def dashboard_url
@@ -27,53 +84,45 @@ module AMF
       CSV.generate { |csv| csv << Account.attribute_names }
     end
 
-    def self.normalize_field(field)
+    def self.field_name(field)
       field.gsub("?", "").gsub(/\s+/, "_").downcase
     end
 
-    def self.load_mega(file, prune=false)
-      if prune
-        puts "Deleting all records"
-        delete_all
+    def self.load_record(record, verbose=false) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+      account_id = record["Account ID"].to_s.strip
+      email = record["Contact Email"].to_s.strip.downcase
+
+      unless account_id && !email.blank? && email =~ /^\S+@\S+$/
+        warn "Invalid record: #{record}"
+        return
       end
 
-      puts "Loading #{file} into the DB"
-      CSV.foreach(file, headers: true) { |record| load record }
+      print "Adding #{account_id}... " if verbose
 
-      puts "#{Account.count} records added."
-    end
+      where(account_id: account_id, contact_email: email).first_or_create do |account|
+        record.to_h.each_key do |field|
+          next if ["Account ID", "Contact Email"].include? field
 
-    def self.load_stripe(file)
-      CSV.foreach(file, headers: true) do |row|
-        email = row["Email"].to_s.strip.downcase
-
-        account = Account.where(contact_email: email).first unless email.empty?
-
-        unless account
-          warn "Account with #{email} could not be found in the MEGA data"
-          next
+          account[Account.field_name(field)] = record[field]
         end
 
-        account.update has_stripe: true
+        if account.changed?
+          puts "saved" if verbose
+
+          unless account.valid? && account.save!
+            warn "Unable to create record for #{email}: #{account.errors.messages.inspect}"
+          end
+        elsif verbose
+          puts "unchanged"
+        end
       end
-
-      puts "#{Account.where(has_stripe: true).count} records added."
     end
 
-    def self.load_amf(file, header=nil) # rubocop:disable Metrics/AbcSize
-      count = 0
+    def self.set_field(field, email_header, file)
+      CSV.foreach(file, headers: !email_header.nil?) do |row|
+        email = row[email_header || 0].to_s.strip.downcase
 
-      CSV.foreach(file, headers: !header.nil?) do |row|
-        if header.nil?
-          email = row[0].to_s.strip.downcase
-        elsif row.has_key? header
-          email = row[header].to_s.strip.downcase
-        end
-
-        if email.blank?
-          warn "Could not find an email field in the input data"
-          return false
-        end
+        next if email.blank?
 
         account = Account.where(contact_email: email).first
 
@@ -82,33 +131,38 @@ module AMF
           next
         end
 
-        account.update amf_active: true
-        count += 1
+        account.update_attribute(field, true)
       end
 
-      puts "#{count} records were updated" if count.positive?
-      puts "#{Account.where(amf_active: true).count} total records AMFed."
+      puts "#{Account.where(field => true).count} total records."
     end
 
-    def self.load(record) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
-      account_id = record["Account ID"].to_s.strip
-      email = record["Contact Email"].to_s.strip.downcase
+    def self.load_mega(file, opts)
+      verbose = opts.fetch :verbose, false
 
-      return unless account_id && !email.blank? && email =~ /^\S+@\S+$/
-
-      where(account_id: account_id, contact_email: email).first_or_create do |account|
-        record.to_h.each_key do |field|
-          next if field.include? ["Account ID", "Contact Email"]
-
-          account[Account.normalize_field(field)] = record[field]
-        end
-
-        if account.changed?
-          unless account.valid? && account.save
-            warn "Unable to create record for #{email}: #{account.errors.messages.inspect}"
-          end
-        end
+      if opts.fetch :prune
+        puts "Deleting all records" if verbose
+        delete_all
       end
+
+      puts "Adding records..." if verbose
+
+      CSV.foreach(file, headers: true) { |record| load_record(record, verbose) }
+
+      puts "#{Account.count} records added." if verbose
+    end
+
+    def self.load_funnel(file)
+      set_field(:on_click_funnel, "Email", file)
+    end
+
+    def self.load_stripe(file)
+      set_field(:has_stripe, "Email", file)
+    end
+
+    def self.load_amf(file)
+      file_header = File.open(file, &:readline).strip
+      set_field(:amf_active, file_header =~ /email/i ? file_header : nil, file)
     end
   end
 end
