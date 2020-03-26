@@ -1,9 +1,15 @@
 production:
   clients:
     default:
-      #uri: mongodb://perfect:ce11bab4a5c9d51ca494e629e0d8eb75650ee2bc@candidate.14.mongolayer.com:10935,candidate.37.mongolayer.com:10895/perfect_audience_demo
-      #uri: mongodb://localhost:27017/amf_cli
       database: amf_cli
+      hosts:
+        - localhost:27017
+      options:
+        server_selection_timeout: 1
+test:
+  clients:
+    default:
+      database: amf_cli_test
       hosts:
         - localhost:27017
       options:

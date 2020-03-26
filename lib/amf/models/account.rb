@@ -4,8 +4,11 @@ module AMF
   class Account
     include Mongoid::Document
 
-    validates :account_id, presence: true
+    validates :account_id, presence: true, uniqueness: true
     validates :contact_email, presence: true, uniqueness: {case_insensitive: true}
+
+    index({account_id: 1}, {unique: true})
+    index({contact_email: 1}, {unique: true})
 
     field :account_id, type: String
     field :account_name, type: String
@@ -59,9 +62,6 @@ module AMF
     field :has_stripe, type: Boolean, default: false
     field :amf_active, type: Boolean, default: false
 
-    index({account_id: 1}, {unique: true})
-    index({contact_email: 1}, {unique: true})
-
     ##
     # Instance Methods
     ##
@@ -92,18 +92,15 @@ module AMF
     end
 
     def self.field_name(field)
-      field.gsub("?", "").gsub(/\s+/, "_").downcase
-    end
-
-    def self.valid_email(email)
-      account_id && !email.blank? && email =~ /^\S+@\S+$/
+      # field.gsub("?", "").gsub(/\s+/, "_").downcase
+      field.underscore.parameterize(separator: "_").to_sym
     end
 
     def self.load_amf_record(record, verbose=false)
       account_id = record.delete("Account ID").strip
       contact_email = record.delete("Contact Email").strip.downcase
 
-      unless valid_email(contact_email)
+      unless account_id && contact_email =~ /^\S+@\S+$/
         warn "Invalid record: #{record}"
         return
       end

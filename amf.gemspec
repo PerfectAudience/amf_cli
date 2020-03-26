@@ -31,5 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "mongoid"
   spec.add_dependency "thor"
 
+  spec.add_development_dependency "factory_bot"
+  spec.add_development_dependency "mongoid-rspec"
   spec.add_development_dependency "rspec"
 end
