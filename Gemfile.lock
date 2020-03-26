@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    AMF (1.0.1)
+    AMF (2.0.0)
       mongoid
       thor
 
